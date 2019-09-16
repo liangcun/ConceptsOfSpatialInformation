@@ -5,7 +5,7 @@ Core Concepts of Spatial Information - JavaScript
 This JavaScript API is designed to provide experts outside GIS domain an easy-to-use spatial computing library over the Web.
 It is built on top of `ArcGIS JavaScript API 4.x`, and uses Dojo toolkit to ensure simplicity and efficiency.
 
-See the [Readme](../../README.md) in the parent directory for general information about the Core Concepts.
+See the [Readme](../README.md) in the parent directory for general information about the Core Concepts.
 
 Contents
 ----------------------
