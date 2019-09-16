@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>CcObject test</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/esri/css/main.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="css/test.css">
+
+    <!-- Configure Dojo first -->
+    <script>var dojoConfig = {
+        packages: [{
+            name: "CoreConcepts",
+            location: "/CoreConceptsJs" //The "location" is relative to your server path.
+        }]
+    };
+    </script>
+    <!--Load the ArcGIS API for JavaScript resources from CDN-->
+    <script src="https://js.arcgis.com/4.4/"></script>
+
+    <script>
+        var app;
+        require(["esri/Map", "esri/views/MapView", "CoreConcepts/CcObject",
+                    "dijit",
+                    "dojo/dom",
+                    "dojo/on",
+                    "dojo/parser",
+                    "dijit/layout/BorderContainer",
+                    "dijit/layout/ContentPane"],
+                function (Map, MapView, CcObject,
+                          dijit,
+                          dom,
+                          on,
+                          parser) {
+                    parser.parse();
+                    var map = new Map({
+                        basemap: "topo"
+                    });
+                    var view = new MapView({
+                        map: map,
+                        center: [125, 38],
+                        zoom: 6,
+                        container: "viewDiv"
+                    });
+
+                    //var url = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/china/MapServer/0";
+                    var url = "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer/0";
+                    var objNK = new CcObject(url, {SQL: "Country = 'North Korea'"});
+                    var objSK = new CcObject(url, {SQL: "Country = 'South Korea'"});
+
+                    //display layer
+                    map.add(objNK.layer);
+                    on(dom.byId("NK"), "click", changeLayer);
+                    on(dom.byId("SK"), "click", changeLayer);
+
+                    //object's bounds
+                    objNK.bounds().then(function (result) {
+                        console.log(result);
+                    });
+
+
+                    //change layer
+                    function changeLayer() {
+                        var nkChecked = dom.byId("NK").checked;
+                        var skChecked = dom.byId("SK").checked;
+                        if (nkChecked) {
+                            map.removeAll();
+                            map.add(objNK.layer);
+                        }
+                        if (skChecked) {
+                            map.removeAll();
+                            map.add(objSK.layer);
+                        }
+                    }
+
+                    function executeProperty() {
+                        document.getElementById("out").innerHTML = "computing";
+                        var pName = dijit.byId("property").get("value");
+                        if (dom.byId("NK").checked) {
+                            objNK.property(pName).then(function (pValue) {
+                                document.getElementById("out").innerHTML = pValue;
+                                console.log(pValue);
+                            });
+                        } else {
+                            objSK.property(pName).then(function (pValue) {
+                                document.getElementById("out").innerHTML = pValue;
+                                console.log(pValue);
+                            });
+                        }
+                        ;
+                    }
+
+                    app = {
+                        executeProperty: executeProperty
+                    };
+                })
+    </script>
+</head>
+<body class="claro">
+<div data-dojo-type="dijit.layout.BorderContainer"
+     data-dojo-props="design:'headline',gutters:false"
+     style="width: 100%; height: 100%; margin: 0;">
+
+    <div id="viewDiv" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'center'">
+    </div>
+    <div id="leftPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'left'">
+        <div id="info">
+            <div>
+                <input type="radio" name="Country" id="NK"
+                       data-dojo-props='checked:true' checked>
+                <label for="NK">Object 1</label>
+                <br/>
+                <input type="radio" name="Country" id="SK">
+                <label for="SK">Object 2</label>
+            </div>
+            <br/>
+
+            <label>Property:</label>
+            <select id="property" data-dojo-type="dijit/form/FilteringSelect"
+                    data-dojo-props='style:"width:160px;"'>
+                <option value="FID">ID</option>
+                <option value="Country" selected>Country Name</option>
+                <option value="ISO">ISO Abbreviation</option>
+            </select><br/><br/>
+            <button id="btnProperty" style="width:160px" onclick="app.executeProperty();">Get Property</button>
+            <br/><br/>
+            <output type="text" id="out"></output>
+        </div>
+        <div id='legendDiv' style='display:none;margin-top:15px;'></div>
+    </div>
+</div>
+</body>
+</html>
