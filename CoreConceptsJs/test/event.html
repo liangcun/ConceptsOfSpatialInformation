@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>CcEvent test</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/esri/css/main.css">
+    <link rel="stylesheet" href="css/test.css">
+
+    <!-- Configure Dojo first -->
+    <script>var dojoConfig = {
+        packages: [{
+            name: "CoreConcepts",
+            location: "/CoreConceptsJs" //The "location" is relative to your server path.
+        }]
+    };
+    </script>
+    <!--Load the ArcGIS API for JavaScript resources from CDN-->
+    <script src="https://js.arcgis.com/4.4/"></script>
+
+    <script>
+        require(["esri/Map", "esri/views/MapView", "CoreConcepts/CcObject", "CoreConcepts/CcEvent"],
+                function (Map, MapView, CcObject, CcEvent) {
+                    var map = new Map({
+                        basemap: "topo"
+                    });
+                    var view = new MapView({
+                        map: map,
+                        center: [-70, 15],
+                        zoom: 4,
+                        container: "viewDiv"
+                    });
+
+                    //https://www.arcgis.com/home/search.html?q=%20Historical%20Hurricanes%20NOAA&start=1&num=20
+                    //var url = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Recent_Hurricanes_v1/FeatureServer/0";
+                    //var url = "http://utility.arcgis.com/usrsvcs/servers/d3b6dbf8137a4940b861938bc48a9774/rest/services/LiveFeeds/Hurricane_Recent/MapServer/1";
+                    var url = "https://services.arcgis.com/XSeYKQzfXnEgju9o/ArcGIS/rest/services/The_2017_Atlantic_Hurricane_season_(to_October_16th)/FeatureServer/";
+                    var obj0 = new CcObject(url + "0", {SQL: "STORMNAME = 'HARVEY'"});
+                    var obj1 = new CcObject(url + "1", {SQL: "STORMNAME = 'IRMA'"});
+                    var obj2 = new CcObject(url + "2", {SQL: "STORMNAME = 'JOSE'"});
+                    //var obj6 = new CcObject(url, {SQL: "STORMNAME = 'SONCA' AND STORMTYPE = 'Tropical Depression'"});
+                    //var obj7 = new CcObject(url, {SQL: "STORMNAME = 'SONCA' AND STORMTYPE = 'Tropical Storm'"});
+                    map.addMany([obj0.layer, obj1.layer, obj2.layer]);
+
+                    // hurricanes: https://www.arcgis.com/home/webmap/viewer.html?webmap=2f5a28f82f4d41ec8dbe6cf96375a970
+                    // https://www.arcgis.com/apps/PublicInformation/index.html?appid=a2b187e887924f4488d273b5972ea062
+                    var st0 = new Date("August 18, 2017 17:00:00");
+                    var et0 = new Date("August 31, 2017 23:00:00");
+                    var harvey = new CcEvent("wp092017_0", {start: st0, end: et0}, [obj0], {
+                        name: "HARVEY",
+                        Intensity: 35.00
+                    });
+
+                    var st1 = new Date("August 30, 2017 17:00:00");
+                    var et1 = new Date("September 11, 2017 05:00:00");
+                    var irma = new CcEvent("wp092017_1", {start: st1, end: et1}, [obj1], {
+                        name: "IRMA",
+                        Intensity: 120.00
+                    });
+
+                    var st2 = new Date("September 5, 2017 17:00:00");
+                    var et2 = new Date("September 11, 2017 00:00:00");
+                    var jose = new CcEvent("wp092017_2", {start: st2, end: et2}, [obj2], {
+                        name: "JOSE",
+                        Intensity: 105.00
+                    });
+
+                    //Ask questions
+                    console.log("When did HARVEY storm happen? " + harvey.when());
+                    console.log("What was the time period of HARVEY storm? " + harvey.within());
+                    console.log("Did JOSE storm happen during IRMA storm? " + jose.during(irma));
+                    console.log("Did HARVEY happen before JOSE? " + harvey.before(jose));
+                    console.log("Did HARVEY happen after JOSE? " + harvey.after(jose));
+                    console.log("Was there any temporal overlap between HARVEY and IRMA storms? " + harvey.overlap(irma));
+
+                })
+    </script>
+</head>
+<body>
+<div id="viewDiv"></div>
+</body>
+</html>
