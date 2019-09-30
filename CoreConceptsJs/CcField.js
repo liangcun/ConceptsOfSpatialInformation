@@ -30,12 +30,24 @@ define([
                 return;
             }
             //default rending rule is "None"
+            //StretchType: 0 = None, 3 = StandardDeviation, 4 = Histogram Equalization,
+            // 5 = MinMax, 6 = PercentClip, 9 = Sigmoid
             var rf = new RasterFunction({
                 functionName: "Stretch",
                 functionArguments: {
-                    "StretchType": 0
+                    "StretchType": 6,
+                    "MinPercent": 0.5,
+                    "MaxPercent": 0.5,
+                    "Gamma": [3.80412765756321, 3.80412765756321, 3.80412765756321],
+                    "DRA": true
                 }
             });
+            //var rf = new RasterFunction({
+            //    functionName: "Stretch",
+            //    functionArguments: {
+            //        "StretchType": 0
+            //    }
+            //});
             this._rule = rf;
 
             if (opt !== undefined) {
@@ -250,6 +262,31 @@ define([
          *@param cellH: cell height
          */
         coarsen: function (cellW, cellH) {
+            //StretchType: 0 = None, 3 = StandardDeviation, 4 = Histogram Equalization,
+            // 5 = MinMax, 6 = PercentClip, 9 = Sigmoid
+            //var rfStretch = new RasterFunction();
+            //rfStretch.functionName = "Stretch";
+            //rfStretch.functionArguments = {
+            //    "StretchType": 9, //9 = Sigmoid
+            //    "UseGamma": true,
+            //    "ComputeGamma": true,
+            //    "DRA": true,
+            //    "Raster": this._rule
+            //};
+            //this._rule = rfStretch;
+            //display the result with a stretch function
+            var rf = new RasterFunction({
+                functionName: "Stretch",
+                functionArguments: {
+                    "StretchType": 6,
+                    "MinPercent": 0.5,
+                    "MaxPercent": 0.5,
+                    "DRA": true,
+                    "Raster": this._rule
+                }
+            });
+            this._rule = rf;
+
             var rfResample = new RasterFunction();
             rfResample.functionName = "Resample";
             //rfResample.variableName = "Raster";
