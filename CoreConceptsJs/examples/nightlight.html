@@ -5,8 +5,8 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>nighttime lights in 1994</title>
 
-    <link rel="stylesheet" href="https://js.arcgis.com/3.19/esri/css/esri.css">
-    <link rel="stylesheet" href="https://js.arcgis.com/3.19/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/esri/css/main.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/dijit/themes/claro/claro.css">
     <link rel="stylesheet" href="css/ex1.css">
 
     <!-- Configure Dojo first -->
@@ -18,44 +18,50 @@
     };
     </script>
     <!--Load the ArcGIS API for JavaScript resources from CDN-->
-    <script src="https://js.arcgis.com/3.19/"></script>
+    <script src="https://js.arcgis.com/4.4/"></script>
 
     <script>
         var app;
-        require(["esri/map",
-                    "esri/domUtils",
-                    "CoreConcepts/CcField",
+        require(["CoreConcepts/CcField",
                     "CoreConcepts/CcObject",
+                    "esri/Map",
+                    "esri/views/MapView",
                     "dojo/dom",
                     "dojo/on",
                     "dojo/parser",
                     "dijit/layout/BorderContainer",
-                    "dijit/layout/ContentPane",
-                    "dojo/domReady!"],
-                function (Map, domUtils, CcField, CcObject, dom, on, parse) {
+                    "dijit/layout/ContentPane"],
+                function (CcField, CcObject, Map, MapView, dom, on, parse) {
                     parse.parse();
-                    var map = new Map("map", {
-                        basemap: "gray",
-                        center: [120, 35],
-                        logo: false,
-                        zoom: 4
-                    });
 
                     //input data
                     var url_lights_F10 = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/F101994_v4b_web_stable_lights_avg_vis/ImageServer";
                     var url_lights_F12 = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/F121994_v4b_web_stable_lights_avg_vis/ImageServer";
+                    var lights_F10 = new CcField(url_lights_F10);
+                    var lights_F12 = new CcField(url_lights_F12);
+                    //var url_lights = "https://gis.ngdc.noaa.gov/arcgis/rest/services/dmsp/stable_lights/ImageServer";
                     var url_china = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/china/MapServer/0";
                     var url_china_roads = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/China_Roads/MapServer/0";
                     var url_china_flares = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/gas_flares_China/MapServer/0";
-                    //Step 1. Interpret luminosity data as fields；roads and gas flares data as objects
-                    var lights_F10 = new CcField(url_lights_F10);
-                    var lights_F12 = new CcField(url_lights_F12);
+
+                    //Interpret luminosity data as fields；roads and gas flares data as objects
+//                    var lights_F10 = new CcField(url_lights, {dimInfo: {Year: 1994, Satellite: "F10"}});
+//                    var lights_F12 = new CcField(url_lights, {dimInfo: {Year: 1994, Satellite: "F12"}});
                     var boundary = new CcObject(url_china);
                     var roads = new CcObject(url_china_roads);
                     var gas_flares = new CcObject(url_china_flares);
 
-                    //display layer
-                    map.addLayer(lights_F10.layer);
+                    var map = new Map({
+                        basemap: "topo",
+                        layers: [lights_F10.layer]
+                    });
+                    var view = new MapView({
+                        map: map,
+                        center: [115, 35],
+                        zoom: 4,
+                        container: "viewDiv"
+                    });
+
                     on(dom.byId("DMSPF10"), "click", changeLayer);
                     on(dom.byId("DMSPF12"), "click", changeLayer);
                     on(dom.byId("boundary"), "click", changeLayer);
@@ -70,9 +76,8 @@
                     //Step 1. What is the mean luminosity for the year 1994?
                     function executeAverage() {
                         console.log("Execute local operation");
-                        map.removeAllLayers();
-                        map.setBasemap("gray");
-                        map.addLayer(lights_F10.layer);
+                        map.removeAll();
+                        map.add(lights_F10.layer);
                         lights_F10.local(lights_F12, "average");
                     }
 
@@ -86,19 +91,19 @@
                         var clipType2 = dom.byId("type2").value;
                         var clipType3 = dom.byId("type3").value;
                         if (dom.byId("ckDomain3").checked) {
-                            domUtils.show(dom.byId("status"));
+                            //domUtils.show(dom.byId("status"));
                             dom.byId("status").innerHTML = "Restricting road buffer domain...";
                             roads_buffer.then(function (buffered_geometry) {
-                                lights_F10.restrictDomain(buffered_geometry[0], clipType3);
-                                domUtils.hide(dom.byId("status"));
+                                lights_F10.restrictDomain(buffered_geometry, clipType3);
+                                //domUtils.hide(dom.byId("status"));
                             });
                         }
                         if (dom.byId("ckDomain1").checked) {
-                            domUtils.show(dom.byId("status"));
+                            //domUtils.show(dom.byId("status"));
                             dom.byId("status").innerHTML = "Restricting boundary domain...";
                             boundary_geo.then(function (boundary_geometry) {
                                 lights_F10.restrictDomain(boundary_geometry, clipType1);
-                                domUtils.hide(dom.byId("status"));
+                                //domUtils.hide(dom.byId("status"));
                             });
                         }
                         if (dom.byId("ckDomain2").checked) {
@@ -113,20 +118,15 @@
                         console.log("Execute coarsen operation");
                         var cellW = dom.byId("cellWidth").value;
                         var cellH = dom.byId("cellHeight").value;
-                        lights_F10.coarsen(0.1, 0.1);
+                        lights_F10.coarsen(cellW, cellH);
                     }
 
                     //reload the image
                     function executeReset() {
-                        map.removeAllLayers();
-                        map.setBasemap("gray");
+                        map.removeAll();
                         lights_F10 = new CcField(url_lights_F10);
-                        map.addLayer(lights_F10.layer);
-                    }
-
-                    //display result
-                    function executeShow() {
-                        lights_F10.show();
+                        //lights_F10 = new CcField(url_lights, {dimInfo: {Year: 1994, Satellite: "F10"}});
+                        map.add(lights_F10.layer);
                     }
 
                     //change layer
@@ -137,29 +137,24 @@
                         var roadsChecked = dom.byId("roads").checked;
                         var flaresChecked = dom.byId("flares").checked;
                         if (f10Checked) {
-                            map.removeAllLayers();
-                            map.setBasemap("gray");
-                            map.addLayer(lights_F10.layer);
+                            map.removeAll();
+                            map.add(lights_F10.layer);
                         }
                         if (f12Checked) {
-                            map.removeAllLayers();
-                            map.setBasemap("gray");
-                            map.addLayer(lights_F12.layer);
+                            map.removeAll();
+                            map.add(lights_F12.layer);
                         }
                         if (boundaryChecked) {
-                            map.removeAllLayers();
-                            map.setBasemap("gray");
-                            map.addLayer(boundary.layer);
+                            map.removeAll();
+                            map.add(boundary.layer);
                         }
                         if (flaresChecked) {
-                            map.removeAllLayers();
-                            map.setBasemap("gray");
-                            map.addLayer(gas_flares.layer);
+                            map.removeAll();
+                            map.add(gas_flares.layer);
                         }
                         if (roadsChecked) {
-                            map.removeAllLayers();
-                            map.setBasemap("gray");
-                            map.addLayer(roads.layer);
+                            map.removeAll();
+                            map.add(roads.layer);
                         }
                     }
 
@@ -167,8 +162,7 @@
                         executeAverage: executeAverage,
                         executeDomain: executeDomain,
                         executeGranularity: executeGranularity,
-                        executeReset: executeReset,
-                        executeShow: executeShow
+                        executeReset: executeReset
                     };
                 });
     </script>
@@ -179,11 +173,11 @@
      data-dojo-props="design:'headline',gutters:false"
      style="width: 100%; height: 100%; margin: 0;">
 
-    <div id="map" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'center'">
+    <div id="viewDiv" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'center'">
         <span id="status" style='position:absolute;bottom:5px;'></span>
     </div>
 
-    <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'left'">
+    <div id="leftPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'left'">
         <h3>Global nighttime lights for 1994</h3>
         <hr/>
         <div>
@@ -278,9 +272,6 @@
                 <tr>
                     <td>
                         <button id="btnRest" style="width:80px" onclick="app.executeReset()">Reset image</button>
-                    </td>
-                    <td>
-                        <button id="btnShow" style="width:80px" onclick="app.executeShow()">Display result</button>
                     </td>
                 </tr>
             </table>
