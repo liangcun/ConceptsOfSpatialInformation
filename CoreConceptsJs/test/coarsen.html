@@ -34,8 +34,10 @@
                           parser) {
                     parser.parse();
                     //var url = "https://ags-raid.geog.ucsb.edu:6443/arcgis/rest/services/light/F101994_v4b_web_stable_lights_avg_vis/ImageServer";
+                    //var url = "http://ags-raid.geog.ucsb.edu:6080/arcgis/rest/services/light/F182013_mosaic/ImageServer";
                     var url = "https://gis.ngdc.noaa.gov/arcgis/rest/services/dmsp/stable_lights/ImageServer";
-                    var p1 = new Polygon([[119.5, 31.5], [119.5, 32.5], [120.5, 32.5], [120.5, 31.5], [119.5, 31.5]]);
+                    //var p1 = new Polygon([[119.5, 31.5], [119.5, 32.5], [120.5, 32.5], [120.5, 31.5], [119.5, 31.5]]);
+                    var p1 = new Polygon([[110, 26], [110, 34], [122, 34], [122, 26], [110, 26]]);
                     var opt = {domain: {inside: [p1]}};
                     var field1 = new CcField(url, opt);
                     var map = new Map({
@@ -43,8 +45,8 @@
                     });
                     var view = new MapView({
                         map: map,
-                        center: [120, 32],
-                        zoom: 11,
+                        center: [116, 30],
+                        zoom: 10,
                         container: "viewDiv"
                     });
                     map.add(field1.layer);
